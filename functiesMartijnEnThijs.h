@@ -15,8 +15,7 @@ int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst,
 // point heeft een Mat object nodig en returnt een cordinaat (0,0)
 Point vindEerstePixel(Mat &input, vector<Point> &uitkomst, bool &eenObjectGevonden);
 int bendingEnergy(vector<vector<int>> vorigeRichting);
-
-
+int allBoundingBoxes(const vector<vector<Point>> & contours, vector<vector<Point>> & bbs);
 
 int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst, vector<vector<int>> &vorigeRichting) {
 
@@ -47,10 +46,8 @@ int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst,
 		cout << "B0 : " << b0 << "     Ci : " << c0 << endl;
 		vorigeRichting[i] = { 4 };
 
-		for (int j = 0; j < firstpixelVec3.size(); j++)
-		{
 			uitkomst.push_back(vector<Point>());
-		}
+
 
 
 
@@ -246,4 +243,57 @@ int bendingEnergy(vector<int> vorigeRichting) {
 
 
 	return bewegingsEnergie;
+}
+
+int allBoundingBoxes(const vector<vector<Point>> & contours, vector<vector<Point>> & bbs)
+{
+	for (int j = 0; j < contours.size(); j++) 
+	{
+		int minX = INT_MAX;
+		int minY = INT_MAX;
+		int maxX = INT_MIN;
+		int maxY = INT_MIN;
+
+		for (int i = 0; i < contours[j].size(); i++)
+		{
+			if (contours[j][i].x < minX)
+			{
+				minX = contours[j][i].x;
+			}
+
+			if (contours[j][i].y < minY)
+			{
+				minY = contours[j][i].y;
+			}
+
+			if (contours[j][i].x > maxX)
+			{
+				maxX = contours[j][i].x;
+			}
+
+			if (contours[j][i].y > maxY)
+			{
+				maxY = contours[j][i].y;
+			}
+		}
+		for (int y = minY; y <= maxY; y++)
+		{
+			for (int x = minX; x <= maxX; x++)
+			{
+				if (y == minY || y == maxY)
+				{
+					bbs[j].push_back(Point(x, y));
+				}
+
+				else if (x == minX | x == maxX )
+				{
+					bbs[j].push_back(Point(x, y));
+				}
+
+
+			}
+		}
+
+	}
+	return bbs.size();
 }
