@@ -13,6 +13,7 @@ int moore(Mat &input, vector<Point> firstPixel, vector<Point> &uitkomst, vector<
 Point vindEerstePixel(Mat &input, vector<Point> &uitkomst, bool &eenObjectGevonden);
 int bendingEnergy(vector<int> vorigeRichting);
 
+// Harrie!!!
 
 int main(int argc, char** argv) {
 	
