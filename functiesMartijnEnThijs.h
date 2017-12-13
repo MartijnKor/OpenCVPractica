@@ -16,7 +16,10 @@ int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst,
 Point vindEerstePixel(Mat &input, vector<Point> &uitkomst, bool &eenObjectGevonden);
 int bendingEnergy(vector<vector<int>> vorigeRichting);
 int allBoundingBoxes(const vector<vector<Point>> & contours, vector<vector<Point>> & bbs);
+int roiThijsenMartijn(Mat &input, Mat &output, Point & minXY, Point & maxXY);
+string type2str(int type);
 
+// deze functie omlijnt een object in een matobject.
 int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst, vector<vector<int>> &vorigeRichting) {
 
 	Mat labeld_img;
@@ -27,7 +30,8 @@ int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst,
 	Mat bitconv;
 	threshold(input, input, 1, 1, CV_THRESH_BINARY);
 	input.convertTo(bitconv, CV_16S);
-
+	// bereken het aantal blobs in een afbeelding
+	// schrijf in firstpixelVec3 de eerste pixel van de vector
 	aantalpunten = labelBLOBsInfo(bitconv, labeld_img, firstpixelVec3, posVec3, areaVec3, 20);
 
 	// x en y omdraaien:
@@ -37,7 +41,7 @@ int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst,
 		vorigeRichting.push_back(vector<int>());
 	}
 
-
+	// wanneer er een fistpixelgevonden is:
 	for (int i = 0; i < firstpixelVec3.size(); i++)
 	{
 		// Calibratie.
@@ -46,7 +50,7 @@ int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst,
 		cout << "B0 : " << b0 << "     Ci : " << c0 << endl;
 		vorigeRichting[i] = { 4 };
 
-			uitkomst.push_back(vector<Point>());
+		uitkomst.push_back(vector<Point>());
 
 
 
@@ -182,6 +186,7 @@ int moore(Mat &input, vector<Point> firstPixel, vector<vector<Point>> &uitkomst,
 
 }
 
+// functie die de firstpixel vind voor een object
 Point vindEerstePixel(Mat &input, vector<Point> &uitkomst, bool &eenObjectGevonden)
 {
 	for (int i = 0; i < input.rows; i++)
@@ -211,6 +216,7 @@ Point vindEerstePixel(Mat &input, vector<Point> &uitkomst, bool &eenObjectGevond
 	return (-1, 0);
 }
 
+// functie die de engergie berekent voor het buigen van de contour
 int bendingEnergy(vector<int> vorigeRichting) {
 	// bereken hoeveel stappen de moore functie naar rechts gedraaid is.
 	// zet het aantal stappen naar rechts in een vector
@@ -225,6 +231,7 @@ int bendingEnergy(vector<int> vorigeRichting) {
 			int eersteBeweging;
 			int tweedeBeweging;
 			int totaleBeweging;
+			// de eerste richting wordt van de tweede afgehaad.
 			eersteBeweging = vorigeRichting[i];
 			tweedeBeweging = vorigeRichting[i + 1];
 			totaleBeweging = abs(eersteBeweging - tweedeBeweging);
@@ -237,7 +244,7 @@ int bendingEnergy(vector<int> vorigeRichting) {
 
 			if (totaleBeweging == 5)
 				totaleBeweging = 3;
-
+			// de bewegings engergie bij elkaar optellen
 			bewegingsEnergie += totaleBeweging;
 		}
 
@@ -245,8 +252,10 @@ int bendingEnergy(vector<int> vorigeRichting) {
 	return bewegingsEnergie;
 }
 
+// deze functies maakt boxen om de objecten in een afbeelding
 int allBoundingBoxes(const vector<vector<Point>> & contours, vector<vector<Point>> & bbs)
 {
+	
 	for (int j = 0; j < contours.size(); j++) 
 	{
 		int minX = INT_MAX;
@@ -296,4 +305,46 @@ int allBoundingBoxes(const vector<vector<Point>> & contours, vector<vector<Point
 
 	}
 	return bbs.size();
+}
+
+// deze functie maakt een ROI om de objecten in een afbeelding
+int roiThijsenMartijn(Mat &input, Mat &output, Point & minXY, Point & maxXY)
+{
+	cout << "Output: " << type2str(output.type()) << endl;
+	cout << "Input: " << type2str(input.type()) << endl;
+	
+	for (int y = minXY.y; y < maxXY.y; y++)
+	{
+		for (int x = minXY.x; x < maxXY.x; x++)
+		{
+			output.at<Vec3b>(Point(x - minXY.x, y - minXY.y)) = input.at<Vec3b>(Point(x, y));
+//			cout << x << "   " << y << "       " << x - minXY.x << "     " << y - minXY.y << endl;
+		}
+	}
+
+	return 0;
+}
+
+
+string type2str(int type) {
+	string r;
+
+	uchar depth = type & CV_MAT_DEPTH_MASK;
+	uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+	switch (depth) {
+	case CV_8U:  r = "8U"; break;
+	case CV_8S:  r = "8S"; break;
+	case CV_16U: r = "16U"; break;
+	case CV_16S: r = "16S"; break;
+	case CV_32S: r = "32S"; break;
+	case CV_32F: r = "32F"; break;
+	case CV_64F: r = "64F"; break;
+	default:     r = "User"; break;
+	}
+
+	r += "C";
+	r += (chans + '0');
+
+	return r;
 }
